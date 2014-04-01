@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+	<id>OsTestFramework</id>
+	<version>2.0.20140401.0</version>
+	<authors>Ivan.Shakhov</authors>
+	<title>OsTestFramework</title>
+	<owners>JetBrains</owners>
+	<projectUrl>https://github.com/van800/OsTestFramework</projectUrl>
+	<requireLicenseAcceptance>false</requireLicenseAcceptance>
+	<description>Library provides functionallity for managing remote Windows machine, like Copy/Delete/Read File, Execute elevated command, Read registry, WMI operations, etc.</description>
+	<dependencies>
+		<dependency id="ZetaLongPaths" version="1.0.0" />
+	</dependencies>
+	</metadata>
+	<files>
+		<file src="bin\JetBrains.OsTestFramework.dll" target="lib"/>
+		<file src="bin\JetBrains.OsTestFramework.pdb" target="lib"/>
+	</files>
+</package>
