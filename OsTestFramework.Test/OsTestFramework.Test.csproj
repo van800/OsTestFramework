@@ -53,7 +53,7 @@
     <Reference Include="System.Management" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="testSrc\RemoteEnvironmentTest.cs" />
+    <Compile Include="testSrc\RemoteEnvironmentTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
