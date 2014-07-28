@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace JetBrains.OsTestFramework.Test
 {
   [TestFixture]
-  public class RemoteEnvironmentTest
+  public class RemoteEnvironmentTests
   {
     private readonly string _assemblyDirectory = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().EscapedCodeBase).AbsolutePath);
 
