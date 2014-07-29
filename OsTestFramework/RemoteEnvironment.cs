@@ -135,12 +135,12 @@ namespace JetBrains.OsTestFramework
         return DoActionInGuest(guestDirPath, (guestNetworkPath) =>
         {
           OsTestLogger.WriteLine(string.Format(" Directory.RemoveReadOnly? 'Remote:{0}'", guestNetworkPath));
-            var directoryInfo = new DirectoryInfo(guestDirPath);
-            var fileSystemInfos = directoryInfo.EnumerateFileSystemInfos("*.", SearchOption.AllDirectories);
-            foreach (var fileSystemInfo in fileSystemInfos)
+          var directoryInfo = new DirectoryInfo(guestNetworkPath);
+            var fileInfos = directoryInfo.EnumerateFiles("*.", SearchOption.AllDirectories);
+            foreach (var fileInfo in fileInfos)
             {
-                var modifiedAttributes = RemoveAttribute(fileSystemInfo.Attributes, FileAttributes.ReadOnly);
-                File.SetAttributes(fileSystemInfo.FullName, modifiedAttributes);
+                var modifiedAttributes = RemoveAttribute(fileInfo.Attributes, FileAttributes.ReadOnly);
+                File.SetAttributes(fileInfo.FullName, modifiedAttributes);
             }
             return true;
         });
