@@ -27,19 +27,18 @@ namespace JetBrains.OsTestFramework
         public IElevatedCommandResult ExecuteElevatedCommandInGuest(string command, string[] args, TimeSpan startTimeout,
             TimeSpan? executionTimeout = null)
         {
-            return ElevatedCommandInGuest("Execute", command, args, startTimeout, executionTimeout);
+            return ElevatedCommandInGuest("Execute", "", command, args, startTimeout, executionTimeout);
         }
 
         public IElevatedCommandResult DetachElevatedCommandInGuest(string command, string[] args, TimeSpan startTimeout,
             TimeSpan? executionTimeout = null)
         {
-            return ElevatedCommandInGuest("Detach", command, args, startTimeout, executionTimeout);
+            return ElevatedCommandInGuest("Detach", " -D", command, args, startTimeout, executionTimeout);
         }
 
-        private IElevatedCommandResult ElevatedCommandInGuest(string commandType, string command,
-            string[] args, TimeSpan startTimeout, TimeSpan? executionTimeout = null)
+        private IElevatedCommandResult ElevatedCommandInGuest(string commandType, string psExecArg, string command, string[] args, TimeSpan startTimeout, TimeSpan? executionTimeout = null)
         {
-            using (var processExecutor = new ProcessExecutor(_remoteEnvironment, commandType, _remoteEnvironment.PsExecPath,
+            using (var processExecutor = new ProcessExecutor(_remoteEnvironment, commandType, psExecArg,
                     command, args, startTimeout, executionTimeout))
             {
                 return processExecutor.Execute();
