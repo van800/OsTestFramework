@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -21,7 +22,7 @@ namespace JetBrains.OsTestFramework.Network
     public WindowsShell(RemoteEnvironment env, string psExecPath)
     {
       Env = env;
-      PsExecWrapperInstance = new PsExecWrapper(psExecPath, env);
+      PsExecWrapperInstance = new PsExecWrapper(env);
 
       // Warmup run of cmd using psexec. Required mainly for the case of machines with some network problem on startup
       OsTestLogger.WriteLine("Start sample initial program with big timeout to ensure all remaining will be also fine with short timeout.");
@@ -110,29 +111,87 @@ namespace JetBrains.OsTestFramework.Network
       }
     }
 
-    /// <summary>
+      public interface IShellOutput
+      {
+          /// <summary>
+          /// Standard output.
+          /// </summary>
+          string StdOut { get; }
+
+          /// <summary>
+          /// Standard error.
+          /// </summary>
+          string StdErr { get; }
+
+          int? ExitCode { get; }
+      }
+
+      /// <summary>
     /// WindowsShell output.
     /// </summary>
-    public struct ShellOutput
-    {
+    public class ShellOutput : IShellOutput
+      {
       /// <summary>
       /// Standard output.
       /// </summary>
-      public string StdOut;
+      private readonly string _stdOut;
 
       /// <summary>
       /// Standard error.
       /// </summary>
-      public string StdErr;
+      private readonly string _stdErr;
+
+        private readonly int? _exitCode;
+
+        public ShellOutput(string stdOut, string stdErr, int? exitCode)
+        {
+            _stdOut = stdOut;
+            _stdErr = stdErr;
+            _exitCode = exitCode;
+        }
+
+        /// <summary>
+        /// Standard output.
+        /// </summary>
+        public string StdOut
+        {
+            get { return _stdOut; }
+        }
+
+        /// <summary>
+        /// Standard error.
+        /// </summary>
+        public string StdErr
+        {
+            get { return _stdErr; }
+        }
+
+        public int? ExitCode
+        {
+            get { return _exitCode; }
+        }
     }
 
-    /// <summary>
-    /// Executes cmd.exe /C "guestCommandLine" > file and parses the result.
-    /// </summary>
-    /// <param name="guestCommandLine">Guest command line, argument passed to cmd.exe.</param>
-    /// <param name="startTimeout"></param>
-    /// <returns>Standard output.</returns>
-    public ShellOutput ExecuteElevatedCommandInGuest(string guestCommandLine, TimeSpan startTimeout)
+      public IShellOutput ExecuteElevatedCommandInGuest(string guestCommandLine, TimeSpan startTimeout,
+          TimeSpan? executionTimeout = null, bool interactWithDesktop = true, params string[] args)
+      {
+          if (guestCommandLine.Contains(" ") && ! (guestCommandLine.StartsWith(@"""") && guestCommandLine.EndsWith(@"""")) )
+          {
+              guestCommandLine = String.Format(@"""{0}""", guestCommandLine);
+          }
+          guestCommandLine += " " + args.Join();
+          return ExecuteElevatedCommandInGuest(guestCommandLine, startTimeout, executionTimeout, interactWithDesktop);
+      }
+
+      /// <summary>
+      /// Executes cmd.exe /C "guestCommandLine" > file and parses the result.
+      /// </summary>
+      /// <param name="guestCommandLine">Guest command line, argument passed to cmd.exe.</param>
+      /// <param name="startTimeout"></param>
+      /// <param name="executionTimeout"></param>
+      /// <param name="interactWithDesktop"></param>
+      /// <returns>Standard output.</returns>
+      public IShellOutput ExecuteElevatedCommandInGuest(string guestCommandLine, TimeSpan startTimeout, TimeSpan? executionTimeout = null, bool interactWithDesktop = true)
     {
       string guestStdOutFilename = Env.CreateTempFileInGuest();
       string guestStdErrFilename = Env.CreateTempFileInGuest();
@@ -147,11 +206,11 @@ namespace JetBrains.OsTestFramework.Network
         Env.CopyFileFromHostToGuest(hostCommandBatch, guestCommandBatch);
         string cmdArgs = string.Format("> \"{0}\" 2>\"{1}\"", guestStdOutFilename, guestStdErrFilename);
         OsTestLogger.WriteLine("ExecuteElevatedCommandInGuest: " + guestCommandLine);
-        PsExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandBatch + " " + cmdArgs, null, startTimeout);
-        
-        var output = new ShellOutput();
-        output.StdOut = ReadFile(guestStdOutFilename);
-        output.StdErr = ReadFile(guestStdErrFilename);
+        var commandResult = PsExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandBatch + " " + cmdArgs, null, startTimeout, executionTimeout, interactWithDesktop);
+
+          var stdOut = ReadFile(guestStdOutFilename);
+          var stdErr = ReadFile(guestStdErrFilename);
+          var output = new ShellOutput(stdOut, stdErr, commandResult.ExitCode);
 
         OsTestLogger.WriteLine("VM_StdOut:" + output.StdOut);
         OsTestLogger.WriteLine("VM_StdErr:" + output.StdErr);
@@ -161,23 +220,25 @@ namespace JetBrains.OsTestFramework.Network
       finally
       {
         File.Delete(hostCommandBatch);
-        Env.DeleteFileFromGuest(guestCommandBatch);
-        Env.DeleteFileFromGuest(guestStdOutFilename);
-        Env.DeleteFileFromGuest(guestStdErrFilename);
+        Env.DeleteFileFromGuest(guestCommandBatch,true);
+        Env.DeleteFileFromGuest(guestStdOutFilename, true);
+        Env.DeleteFileFromGuest(guestStdErrFilename, true);
       }
     }
 
-    /// <summary>
-    /// Run command and wait till process ends. Doesn't provide remote output.
-    /// Plus: directly runs the command - console is not started in VM
-    /// Minus: you will not get any output of the executed command
-    /// If you need the output - use WindowsShell.ExecuteElevatedCommandInGuest
-    /// </summary>
-    /// <param name="guestCommandLine"></param>
-    /// <param name="startTimeout"></param>
-    public void ExecuteElevatedCommandInGuestNoRemoteOutput(string guestCommandLine, TimeSpan startTimeout)
+      /// <summary>
+      /// Run command and wait till process ends. Doesn't provide remote output.
+      /// Plus: directly runs the command - console is not started in VM
+      /// Minus: you will not get any output of the executed command
+      /// If you need the output - use WindowsShell.ExecuteElevatedCommandInGuest
+      /// </summary>
+      /// <param name="guestCommandLine"></param>
+      /// <param name="startTimeout"></param>
+      /// <param name="executionTimeout"></param>
+      /// <param name="interactWithDesktop"></param>
+      public void ExecuteElevatedCommandInGuestNoRemoteOutput(string guestCommandLine, TimeSpan startTimeout, TimeSpan? executionTimeout = null, bool interactWithDesktop = true)
     {
-      PsExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandLine, null, startTimeout);
+      PsExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandLine, null, startTimeout, executionTimeout, interactWithDesktop);
     }
 
     /// <summary>
@@ -195,8 +256,8 @@ namespace JetBrains.OsTestFramework.Network
 
       while (!m.Success && (DateTime.Now - tick) <= startTimeout)
       {
-        var line = PsExecWrapperInstance.DetachElevatedCommandInGuest(guestCommandLine, null, startTimeout);
-        m = Regex.Match(line, @"with process ID \d+.");
+        var commandResult = PsExecWrapperInstance.DetachElevatedCommandInGuest(guestCommandLine, null, startTimeout);
+        m = Regex.Match(commandResult.Output, @"with process ID \d+.");
         Thread.Sleep(2000);
       }
 

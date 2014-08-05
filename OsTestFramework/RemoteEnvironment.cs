@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using JetBrains.OsTestFramework.Common;
@@ -20,18 +21,25 @@ namespace JetBrains.OsTestFramework
     public readonly string IpAddress;
     public readonly string UserName;
     public readonly string Password;
-    public WmiWrapper WmiWrapperInstance { get; private set; }
+      private readonly string _psExecPath;
+      public WmiWrapper WmiWrapperInstance { get; private set; }
     public WindowsShell WindowsShellInstance { get; set; }
     public Dictionary<string, string> GuestEnvironmentVariables { get; private set; }
     public bool IsUACEnabled { get; private set; }
-    
-    public RemoteEnvironment(string ipAddress, string userName, string password, string psExecPath)
+
+      public string PsExecPath
+      {
+          get { return _psExecPath; }
+      }
+
+      public RemoteEnvironment(string ipAddress, string userName, string password, string psExecPath)
     {
       IpAddress = ipAddress;
       UserName = userName;
       Password = password;
+        _psExecPath = psExecPath;
 
-      // wait for ping
+        // wait for ping
       RetryUtility.RetryAction(() =>
         {
           var ping = new Ping();
@@ -112,6 +120,38 @@ namespace JetBrains.OsTestFramework
       }
     }
 
+    public bool RemoveReadOnlyAttributeFromFile(string guestFilePath)
+    {
+        return DoActionInGuest(guestFilePath, (guestNetworkPath) =>
+        {
+          OsTestLogger.WriteLine(string.Format(" File.RemoveReadOnly? 'Remote:{0}'", guestNetworkPath));
+            var fileInfo = new FileInfo(guestFilePath) {IsReadOnly = false};
+            fileInfo.Refresh();
+            return true;
+        });
+    }
+
+    public bool RemoveReadOnlyAttributeFromDirectory(string guestDirPath)
+    {
+        return DoActionInGuest(guestDirPath, (guestNetworkPath) =>
+        {
+          OsTestLogger.WriteLine(string.Format(" Directory.RemoveReadOnly? 'Remote:{0}'", guestNetworkPath));
+          var directoryInfo = new DirectoryInfo(guestNetworkPath);
+            var fileInfos = directoryInfo.EnumerateFiles("*.", SearchOption.AllDirectories);
+            foreach (var fileInfo in fileInfos)
+            {
+                var modifiedAttributes = RemoveAttribute(fileInfo.Attributes, FileAttributes.ReadOnly);
+                File.SetAttributes(fileInfo.FullName, modifiedAttributes);
+            }
+            return true;
+        });
+    }
+
+    private static FileAttributes RemoveAttribute(FileAttributes attributes, FileAttributes attributesToRemove)
+    {
+        return attributes & ~attributesToRemove;
+    }
+
     public bool FileExistsInGuest(string guestPath)
     {
       return DoActionInGuest(guestPath, (guestNetworkPath) =>
@@ -130,12 +170,49 @@ namespace JetBrains.OsTestFramework
         });
     }
 
+    public void KillProcessOnGuest(string processNameOrPattern)
+    {
+        RemoteProcess.ClientTaskKillByName(IpAddress, UserName, Password, processNameOrPattern);
+    }
+
+
+    public void ForceDeleteDirectoryFromGuest(string guestPath)
+    {
+        DoActionInGuest(guestPath, (guestNetworkPath) =>
+        {
+            OsTestLogger.WriteLine(string.Format(" Directory.ForceDeleteDirectoryFromGuest 'Remote:{0}'", guestNetworkPath));
+
+            if (!Directory.Exists(guestNetworkPath)) return true;
+
+            var directory = new DirectoryInfo(guestNetworkPath) {Attributes = FileAttributes.Normal};
+
+            foreach (var info in directory.GetFileSystemInfos("*", SearchOption.AllDirectories))
+            {
+                info.Attributes = FileAttributes.Normal;
+            }
+
+            directory.Delete(true);
+
+            return true;
+        });
+    }
+
     public void DeleteDirectoryFromGuest(string guestPath)
     {
       DoActionInGuest(guestPath, (guestNetworkPath) =>
         {
           OsTestLogger.WriteLine(string.Format(" Directory.Delete 'Remote:{0}'", guestNetworkPath));
           Directory.Delete(guestNetworkPath);
+          return true;
+        });
+    }
+
+    public void DeleteDirectoryFromGuest(string guestPath, bool recursive)
+    {
+      DoActionInGuest(guestPath, (guestNetworkPath) =>
+        {
+          OsTestLogger.WriteLine(string.Format(" Directory.Delete 'Remote:{0}'", guestNetworkPath));
+          Directory.Delete(guestNetworkPath, recursive);
           return true;
         });
     }
@@ -147,6 +224,23 @@ namespace JetBrains.OsTestFramework
             OsTestLogger.WriteLine(string.Format(" File.Delete 'Remote:{0}'", guestNetworkPath));
             File.Delete(guestNetworkPath);
             return true;
+          });
+    }
+
+    public void DeleteFileFromGuest(string guestPath, bool ignoreExceptions)
+    {
+      DoActionInGuest(guestPath, (guestNetworkPath) =>
+          {
+            OsTestLogger.WriteLine(string.Format(" File.Delete 'Remote:{0}'", guestNetworkPath));
+              try
+              {
+                  File.Delete(guestNetworkPath);
+              }
+              catch (Exception)
+              {
+                  if (!ignoreExceptions) throw;
+              }
+              return true;
           });
     }
     
