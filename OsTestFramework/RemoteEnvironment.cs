@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using JetBrains.OsTestFramework.Common;
@@ -166,6 +167,33 @@ namespace JetBrains.OsTestFramework
         {
           OsTestLogger.WriteLine(string.Format(" Directory.Exists? 'Remote:{0}'", guestNetworkPath));
           return Directory.Exists(guestNetworkPath);
+        });
+    }
+
+    public void KillProcessOnGuest(string processNameOrPattern)
+    {
+        RemoteProcess.ClientTaskKillByName(IpAddress, UserName, Password, processNameOrPattern);
+    }
+
+
+    public void ForceDeleteDirectoryFromGuest(string guestPath)
+    {
+        DoActionInGuest(guestPath, (guestNetworkPath) =>
+        {
+            OsTestLogger.WriteLine(string.Format(" Directory.ForceDeleteDirectoryFromGuest 'Remote:{0}'", guestNetworkPath));
+
+            if (!Directory.Exists(guestNetworkPath)) return true;
+
+            var directory = new DirectoryInfo(guestNetworkPath) {Attributes = FileAttributes.Normal};
+
+            foreach (var info in directory.GetFileSystemInfos("*", SearchOption.AllDirectories))
+            {
+                info.Attributes = FileAttributes.Normal;
+            }
+
+            directory.Delete(true);
+
+            return true;
         });
     }
 
