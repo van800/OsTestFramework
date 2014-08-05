@@ -23,11 +23,12 @@ namespace JetBrains.OsTestFramework
         /// <param name="args"></param>
         /// <param name="startTimeout"></param>
         /// <param name="executionTimeout"></param>
+        /// <param name="interactWithDesktop"></param>
         /// <returns></returns>
         public IElevatedCommandResult ExecuteElevatedCommandInGuest(string command, string[] args, TimeSpan startTimeout,
-            TimeSpan? executionTimeout = null)
+            TimeSpan? executionTimeout = null, bool interactWithDesktop = true)
         {
-            return ElevatedCommandInGuest("Execute", "", command, args, startTimeout, executionTimeout);
+            return ElevatedCommandInGuest("Execute", "", command, args, startTimeout, executionTimeout, interactWithDesktop);
         }
 
         public IElevatedCommandResult DetachElevatedCommandInGuest(string command, string[] args, TimeSpan startTimeout,
@@ -36,10 +37,10 @@ namespace JetBrains.OsTestFramework
             return ElevatedCommandInGuest("Detach", " -D", command, args, startTimeout, executionTimeout);
         }
 
-        private IElevatedCommandResult ElevatedCommandInGuest(string commandType, string psExecArg, string command, string[] args, TimeSpan startTimeout, TimeSpan? executionTimeout = null)
+        private IElevatedCommandResult ElevatedCommandInGuest(string commandType, string psExecArg, string command, string[] args, TimeSpan startTimeout, TimeSpan? executionTimeout = null, bool interactWithDesktop = true)
         {
             using (var processExecutor = new ProcessExecutor(_remoteEnvironment, commandType, psExecArg,
-                    command, args, startTimeout, executionTimeout))
+                    command, args, startTimeout, executionTimeout, interactWithDesktop))
             {
                 return processExecutor.Execute();
             }

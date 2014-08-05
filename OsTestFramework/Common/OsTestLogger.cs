@@ -8,7 +8,7 @@ namespace JetBrains.OsTestFramework.Common
 
         static OsTestLogger()
         {
-            _loggingAction = s => Console.WriteLine(s);
+            _loggingAction = Console.WriteLine;
         }
 
         public static void WriteLine(string content)

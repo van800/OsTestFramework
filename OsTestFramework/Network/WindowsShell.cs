@@ -173,14 +173,14 @@ namespace JetBrains.OsTestFramework.Network
     }
 
       public IShellOutput ExecuteElevatedCommandInGuest(string guestCommandLine, TimeSpan startTimeout,
-          TimeSpan? executionTimeout = null, params string[] args)
+          TimeSpan? executionTimeout = null, bool interactWithDesktop = true, params string[] args)
       {
           if (guestCommandLine.Contains(" ") && ! (guestCommandLine.StartsWith(@"""") && guestCommandLine.EndsWith(@"""")) )
           {
               guestCommandLine = String.Format(@"""{0}""", guestCommandLine);
           }
           guestCommandLine += " " + args.Join();
-          return ExecuteElevatedCommandInGuest(guestCommandLine, startTimeout, executionTimeout);
+          return ExecuteElevatedCommandInGuest(guestCommandLine, startTimeout, executionTimeout, interactWithDesktop);
       }
 
       /// <summary>
@@ -189,8 +189,9 @@ namespace JetBrains.OsTestFramework.Network
       /// <param name="guestCommandLine">Guest command line, argument passed to cmd.exe.</param>
       /// <param name="startTimeout"></param>
       /// <param name="executionTimeout"></param>
+      /// <param name="interactWithDesktop"></param>
       /// <returns>Standard output.</returns>
-      public IShellOutput ExecuteElevatedCommandInGuest(string guestCommandLine, TimeSpan startTimeout, TimeSpan? executionTimeout = null)
+      public IShellOutput ExecuteElevatedCommandInGuest(string guestCommandLine, TimeSpan startTimeout, TimeSpan? executionTimeout = null, bool interactWithDesktop = true)
     {
       string guestStdOutFilename = Env.CreateTempFileInGuest();
       string guestStdErrFilename = Env.CreateTempFileInGuest();
@@ -205,7 +206,7 @@ namespace JetBrains.OsTestFramework.Network
         Env.CopyFileFromHostToGuest(hostCommandBatch, guestCommandBatch);
         string cmdArgs = string.Format("> \"{0}\" 2>\"{1}\"", guestStdOutFilename, guestStdErrFilename);
         OsTestLogger.WriteLine("ExecuteElevatedCommandInGuest: " + guestCommandLine);
-        var commandResult = PsExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandBatch + " " + cmdArgs, null, startTimeout, executionTimeout);
+        var commandResult = PsExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandBatch + " " + cmdArgs, null, startTimeout, executionTimeout, interactWithDesktop);
 
           var stdOut = ReadFile(guestStdOutFilename);
           var stdErr = ReadFile(guestStdErrFilename);
@@ -234,9 +235,10 @@ namespace JetBrains.OsTestFramework.Network
       /// <param name="guestCommandLine"></param>
       /// <param name="startTimeout"></param>
       /// <param name="executionTimeout"></param>
-      public void ExecuteElevatedCommandInGuestNoRemoteOutput(string guestCommandLine, TimeSpan startTimeout, TimeSpan? executionTimeout = null)
+      /// <param name="interactWithDesktop"></param>
+      public void ExecuteElevatedCommandInGuestNoRemoteOutput(string guestCommandLine, TimeSpan startTimeout, TimeSpan? executionTimeout = null, bool interactWithDesktop = true)
     {
-      PsExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandLine, null, startTimeout, executionTimeout);
+      PsExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandLine, null, startTimeout, executionTimeout, interactWithDesktop);
     }
 
     /// <summary>

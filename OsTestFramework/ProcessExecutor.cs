@@ -18,17 +18,17 @@ namespace JetBrains.OsTestFramework
         private readonly AutoResetEvent _errorWaitHandle;
         private readonly TimeSpan? _executionTimeout;
         private readonly StringBuilder _output;
+        private readonly RemoteEnvironment _remoteEnvironment;
         private AutoResetEvent _outputWaitHandle;
         private Process _process;
-        private readonly RemoteEnvironment _remoteEnvironment;
 
         public ProcessExecutor(RemoteEnvironment remoteEnvironment, string commandType, string psExecArg, string command,
-            string[] args, TimeSpan startTimeout, TimeSpan? executionTimeout = null)
+            string[] args, TimeSpan startTimeout, TimeSpan? executionTimeout = null, bool interactWithDesktop = true)
         {
             _executionTimeout = executionTimeout;
             _remoteEnvironment = remoteEnvironment;
 
-            string arguments = GenerateArguments(psExecArg, command, args, startTimeout);
+            string arguments = GenerateArguments(psExecArg, command, args, startTimeout, interactWithDesktop);
 
             _process = new Process
             {
@@ -45,30 +45,24 @@ namespace JetBrains.OsTestFramework
             RegisterToEvents();
         }
 
-        private static ProcessStartInfo CreateStartInfo(string psExecPath, string arguments)
+        public void Dispose()
         {
-            return new ProcessStartInfo
+            UnregisterFromEvents();
+
+            if (_process != null)
             {
-                FileName = psExecPath,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                ErrorDialog = false,
-                CreateNoWindow = true
-            };
-        }
-
-        private void RegisterToEvents()
-        {
-            _process.OutputDataReceived += process_OutputDataReceived;
-            _process.ErrorDataReceived += process_ErrorDataReceived;
-        }
-
-        private void UnregisterFromEvents()
-        {
-            _process.OutputDataReceived -= process_OutputDataReceived;
-            _process.ErrorDataReceived -= process_ErrorDataReceived;
+                _process.Dispose();
+                _process = null;
+            }
+            if (_errorWaitHandle != null)
+            {
+                _errorWaitHandle.Dispose();
+            }
+            if (_outputWaitHandle != null)
+            {
+                _outputWaitHandle.Dispose();
+                _outputWaitHandle = null;
+            }
         }
 
         public IElevatedCommandResult Execute()
@@ -97,6 +91,32 @@ namespace JetBrains.OsTestFramework
             return new ElevatedCommandResult(result);
         }
 
+        private static ProcessStartInfo CreateStartInfo(string psExecPath, string arguments)
+        {
+            return new ProcessStartInfo
+            {
+                FileName = psExecPath,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                ErrorDialog = false,
+                CreateNoWindow = true
+            };
+        }
+
+        private void RegisterToEvents()
+        {
+            _process.OutputDataReceived += process_OutputDataReceived;
+            _process.ErrorDataReceived += process_ErrorDataReceived;
+        }
+
+        private void UnregisterFromEvents()
+        {
+            _process.OutputDataReceived -= process_OutputDataReceived;
+            _process.ErrorDataReceived -= process_ErrorDataReceived;
+        }
+
         private void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (e.Data == null)
@@ -121,7 +141,8 @@ namespace JetBrains.OsTestFramework
             }
         }
 
-        private string GenerateArguments(string psExecArg, string command, string[] args, TimeSpan startTimeout)
+        private string GenerateArguments(string psExecArg, string command, string[] args, TimeSpan startTimeout,
+            bool interactWithDesktop)
         {
             string arg = "";
             if (args != null)
@@ -129,30 +150,20 @@ namespace JetBrains.OsTestFramework
                 arg = args.Aggregate((a, b) => string.Format("{0} {1}", a, b));
             }
 
-            string arguments = string.Format("-accepteula \\\\{0} -H -I{1} -N {2} -U {3} -P \"{4}\" {5} {6}",
-                _remoteEnvironment.IpAddress, psExecArg,
-                startTimeout.TotalSeconds, _remoteEnvironment.UserName, _remoteEnvironment.Password, command, arg);
-            return arguments;
-        }
+            StringBuilder argumentsBuilder = new StringBuilder()
+                .AppendFormat(@"-accepteula \\{0}", _remoteEnvironment.IpAddress)
+                .Append(" -H ");
 
-        public void Dispose()
-        {
-            UnregisterFromEvents();
+            if (interactWithDesktop)
+            {
+                argumentsBuilder.Append(" -I ");
+            }
 
-            if (_process != null)
-            {
-                _process.Dispose();
-                _process = null;
-            }
-            if (_errorWaitHandle != null)
-            {
-                _errorWaitHandle.Dispose();
-            }
-            if (_outputWaitHandle != null)
-            {
-                _outputWaitHandle.Dispose();
-                _outputWaitHandle = null;
-            }
+            argumentsBuilder.AppendFormat(@"{0} -N {1} -U {2} -P ""{3}"" {4} {5}", psExecArg, startTimeout.TotalSeconds,
+                _remoteEnvironment.UserName,
+                _remoteEnvironment.Password, command, args);
+
+            return argumentsBuilder.ToString();
         }
     }
 }
