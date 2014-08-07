@@ -2,7 +2,7 @@
 <package >
   <metadata>
 	<id>OsTestFramework</id>
-	<version>2.0.20140401.0</version>
+	<version>2.0.20140807.0</version>
 	<authors>Ivan.Shakhov</authors>
 	<title>OsTestFramework</title>
 	<owners>JetBrains</owners>
@@ -10,7 +10,7 @@
 	<requireLicenseAcceptance>false</requireLicenseAcceptance>
 	<description>Library provides functionallity for managing remote Windows machine, like Copy/Delete/Read File, Execute elevated command, Read registry, WMI operations, etc.</description>
 	<dependencies>
-		<dependency id="ZetaLongPaths" version="1.0.0" />
+		<dependency id="ZetaLongPaths" version="1.0.0.6" />
 	</dependencies>
 	</metadata>
 	<files>
