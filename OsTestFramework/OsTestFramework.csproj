@@ -40,9 +40,8 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
-    <Reference Include="ZetaLongPaths, Version=1.0.0.3, Culture=neutral, PublicKeyToken=b764f59068f31f38, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\ZetaLongPaths.1.0.0\lib\ZetaLongPaths.dll</HintPath>
+    <Reference Include="ZetaLongPaths">
+      <HintPath>..\packages\ZetaLongPaths.1.0.0.6\lib\Net20\ZetaLongPaths.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
