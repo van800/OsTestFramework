@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>JetBrains.OsTestFramework</RootNamespace>
     <AssemblyName>JetBrains.OsTestFramework</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -42,12 +42,14 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
-    <Reference Include="ZetaLongPaths">
-      <HintPath>..\packages\ZetaLongPaths.1.0.0.5\lib\ZetaLongPaths.dll</HintPath>
+    <Reference Include="ZetaLongPaths, Version=1.0.0.6, Culture=neutral, PublicKeyToken=b764f59068f31f38, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\ZetaLongPaths.1.0.0.6\lib\Net20\ZetaLongPaths.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\FileOperations.cs" />
+    <Compile Include="Common\ITestLoggerWriter.cs" />
     <Compile Include="Common\OsTestLogger.cs" />
     <Compile Include="Common\RetryUtility.cs" />
     <Compile Include="ElevatedCommandResult.cs" />

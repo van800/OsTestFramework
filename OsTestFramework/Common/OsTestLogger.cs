@@ -4,26 +4,26 @@ namespace JetBrains.OsTestFramework.Common
 {
     public static class OsTestLogger
     {
-        private static Action<string> _loggingAction;
+        private static ITestLoggerWriter _loggingAction;
 
         static OsTestLogger()
         {
-            _loggingAction = Console.WriteLine;
+            _loggingAction = new ConsoleTestLoggerWriter();
         }
 
         public static void WriteLine(string content)
         {
-            _loggingAction.Invoke(FormatLogMessage(content));
+            _loggingAction.Write(FormatLogMessage(content));
         }
 
-        public static void SetLoggingAction(Action<string> loggingAction)
+        public static void SetLoggingAction(ITestLoggerWriter loggingAction)
         {
             _loggingAction = loggingAction;
         }
 
-        private static string FormatLogMessage(string s)
+        private static string FormatLogMessage(string message)
         {
-            return DateTime.Now.ToString("HH:mm:ss") + " " + s;
+            return DateTime.Now.ToString("HH:mm:ss") + " " + message;
         }
     }
 }

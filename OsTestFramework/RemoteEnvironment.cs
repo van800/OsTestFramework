@@ -137,7 +137,7 @@ namespace JetBrains.OsTestFramework
         {
           OsTestLogger.WriteLine(string.Format(" Directory.RemoveReadOnly? 'Remote:{0}'", guestNetworkPath));
           var directoryInfo = new DirectoryInfo(guestNetworkPath);
-            var fileInfos = directoryInfo.EnumerateFiles("*.", SearchOption.AllDirectories);
+            var fileInfos = directoryInfo.GetFileSystemInfos();
             foreach (var fileInfo in fileInfos)
             {
                 var modifiedAttributes = RemoveAttribute(fileInfo.Attributes, FileAttributes.ReadOnly);
@@ -186,18 +186,28 @@ namespace JetBrains.OsTestFramework
 
             var directory = new DirectoryInfo(guestNetworkPath) {Attributes = FileAttributes.Normal};
 
-            foreach (var info in directory.GetFileSystemInfos("*", SearchOption.AllDirectories))
-            {
-                info.Attributes = FileAttributes.Normal;
-            }
-
-            directory.Delete(true);
+            RecursiveForceDelete(directory);
 
             return true;
         });
     }
 
-    public void DeleteDirectoryFromGuest(string guestPath)
+      private void RecursiveForceDelete(DirectoryInfo directory)
+      {
+          foreach (FileSystemInfo info in directory.GetFileSystemInfos())
+          {
+              info.Attributes = FileAttributes.Normal;
+
+              if (info is DirectoryInfo)
+              {
+                  RecursiveForceDelete(info as DirectoryInfo);
+              }
+          }
+
+          directory.Delete(true);
+      }
+
+      public void DeleteDirectoryFromGuest(string guestPath)
     {
       DoActionInGuest(guestPath, (guestNetworkPath) =>
         {
