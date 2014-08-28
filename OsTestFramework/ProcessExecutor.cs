@@ -21,11 +21,13 @@ namespace JetBrains.OsTestFramework
         private readonly RemoteEnvironment _remoteEnvironment;
         private AutoResetEvent _outputWaitHandle;
         private Process _process;
+        private IAsRemoteUserScopeExecutor _asRemoteUserScopeExecutor;
 
         public ProcessExecutor(RemoteEnvironment remoteEnvironment, string commandType, string psExecArg, string command,
-            string[] args, TimeSpan startTimeout, TimeSpan? executionTimeout = null, bool interactWithDesktop = true)
+            string[] args, TimeSpan startTimeout, IAsRemoteUserScopeExecutor asRemoteUserScopeExecutor, TimeSpan? executionTimeout = null, bool interactWithDesktop = true)
         {
             _executionTimeout = executionTimeout;
+            _asRemoteUserScopeExecutor = asRemoteUserScopeExecutor;
             _remoteEnvironment = remoteEnvironment;
 
             string arguments = GenerateArguments(psExecArg, command, args, startTimeout, interactWithDesktop);
@@ -160,9 +162,8 @@ namespace JetBrains.OsTestFramework
                 argumentsBuilder.Append(" -I ");
             }
 
-            argumentsBuilder.AppendFormat(@"{0} -N {1} -U {2} -P ""{3}"" {4} {5}", psExecArg, startTimeout.TotalSeconds,
-                _remoteEnvironment.UserName,
-                _remoteEnvironment.Password, command, args);
+            _asRemoteUserScopeExecutor.Execute(_remoteEnvironment.IpAddress, _remoteEnvironment.UserName, _remoteEnvironment.Password,
+                () => argumentsBuilder.AppendFormat(@"{0} -N {1} {2} {3}", psExecArg, startTimeout.TotalSeconds, command, args));
 
             return argumentsBuilder.ToString();
         }

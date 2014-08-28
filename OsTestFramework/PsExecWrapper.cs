@@ -40,9 +40,12 @@ namespace JetBrains.OsTestFramework
         private IElevatedCommandResult ElevatedCommandInGuest(string commandType, string psExecArg, string command, string[] args, TimeSpan startTimeout, TimeSpan? executionTimeout = null, bool interactWithDesktop = true)
         {
             using (var processExecutor = new ProcessExecutor(_remoteEnvironment, commandType, psExecArg,
-                    command, args, startTimeout, executionTimeout, interactWithDesktop))
+                    command, args, startTimeout, new AsRemoteUserScopeExecutor(new CmdKeyRunner()), executionTimeout, interactWithDesktop))
             {
-                return processExecutor.Execute();
+                Process.Start("cmdkey.exe", String.Format(@" /add:{0} /user:{1} /pass:{2}", _remoteEnvironment.IpAddress, _remoteEnvironment.UserName, _remoteEnvironment.Password));
+                IElevatedCommandResult commandResult = processExecutor.Execute();
+                Process.Start("cmdkey.exe", String.Format(@" /delete:{0}", _remoteEnvironment.IpAddress));
+                return commandResult;
             }
         }
 

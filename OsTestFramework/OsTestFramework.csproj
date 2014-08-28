@@ -48,6 +48,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsRemoteUserScopeExecutor.cs" />
+    <Compile Include="CmdKeyRunner.cs" />
     <Compile Include="Common\FileOperations.cs" />
     <Compile Include="Common\ITestLoggerWriter.cs" />
     <Compile Include="Common\OsTestLogger.cs" />
