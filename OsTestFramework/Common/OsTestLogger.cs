@@ -2,11 +2,28 @@
 
 namespace JetBrains.OsTestFramework.Common
 {
-  public static class OsTestLogger
-  {
-    public static void WriteLine(string content)
+    public static class OsTestLogger
     {
-      Console.WriteLine(DateTime.Now.ToString("HH:mm:ss") + " " + content);
+        private static ITestLoggerWriter _loggingAction;
+
+        static OsTestLogger()
+        {
+            _loggingAction = new ConsoleTestLoggerWriter();
+        }
+
+        public static void WriteLine(string content)
+        {
+            _loggingAction.Write(FormatLogMessage(content));
+        }
+
+        public static void SetLoggingAction(ITestLoggerWriter loggingAction)
+        {
+            _loggingAction = loggingAction;
+        }
+
+        private static string FormatLogMessage(string message)
+        {
+            return DateTime.Now.ToString("HH:mm:ss") + " " + message;
+        }
     }
-  }
 }

@@ -62,13 +62,24 @@ namespace JetBrains.OsTestFramework
 
     public static void ClientTaskKill(string ip, string userName, string password, string guestPId)
     {
-      string args = string.Format("/S {0} /U {0}\\{1} /P {2} /PID {3} /T /F", ip, userName, password, guestPId);
-      OsTestLogger.WriteLine("Executing at agent: taskkill " + args);
-      string output = RunExternalExe("taskkill", args);
-      OsTestLogger.WriteLine("taskkill output: " + output);
+        TaskKillByProcessFinder(ip, userName, password, String.Format("/PID {0}", guestPId));
     }
 
-    public override bool Equals(object obj)
+    public static void ClientTaskKillByName(string ip, string userName, string password, string processNameOrPattern)
+    {
+        TaskKillByProcessFinder(ip, userName, password, String.Format("/IM {0}", processNameOrPattern));
+    }
+
+      private static void TaskKillByProcessFinder(string ip, string userName, string password,
+          string processFinder)
+      {
+          string args = string.Format("/S {0} /U {0}\\{1} /P {2} {3} /T /F", ip, userName, password, processFinder);
+          OsTestLogger.WriteLine("Executing at agent: taskkill " + args);
+          string output = RunExternalExe("taskkill", args);
+          OsTestLogger.WriteLine("taskkill output: " + output);
+      }
+
+      public override bool Equals(object obj)
     {
       return GuestPId.Equals(((RemoteProcess)obj).GuestPId);
     }
