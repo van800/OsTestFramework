@@ -17,7 +17,7 @@ namespace JetBrains.OsTestFramework
         }
 
         /// <summary>
-        ///     Returns host psexec Output+ErrOutPut
+        ///     Returns host psexec StdOut+ErrOutPut
         /// </summary>
         /// <param name="command"></param>
         /// <param name="args"></param>

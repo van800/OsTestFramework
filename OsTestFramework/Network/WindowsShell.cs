@@ -254,7 +254,7 @@ namespace JetBrains.OsTestFramework.Network
       while (!m.Success && (DateTime.Now - tick) <= startTimeout)
       {
         var commandResult = PsExecWrapperInstance.DetachElevatedCommandInGuest(guestCommandLine, null, startTimeout);
-        m = Regex.Match(commandResult.Output, @"with process ID \d+.");
+        m = Regex.Match(commandResult.StdOut, @"with process ID \d+.");
         Thread.Sleep(2000);
       }
 
