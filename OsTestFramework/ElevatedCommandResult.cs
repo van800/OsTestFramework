@@ -31,9 +31,9 @@ namespace JetBrains.OsTestFramework
     public override string ToString()
     {
       return ("StdErr:" + StdErr + " StdOut:" + StdOut).Replace("\r", " ").Replace("\n", " ") +
-        ExitCode ?? (" ExitCode:" + ExitCode) +
-        ExitTime ?? (" ExitTime:" + ExitTime) +
-        HasExited ?? " HasExited:" + HasExited;
+        (ExitCode.HasValue ? (" ExitCode:" + ExitCode) : "" ) +
+        (ExitTime.HasValue ? (" ExitTime:" + ExitTime) : "" ) +
+        (" HasExited:" + HasExited);
     }
   }
 }
