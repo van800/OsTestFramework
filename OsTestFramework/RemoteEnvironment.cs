@@ -48,7 +48,7 @@ namespace JetBrains.OsTestFramework
 
       // give time for the RPC service to start
       RetryUtility.RetryAction(() => { WmiWrapperInstance = new WmiWrapper(ipAddress, userName, password); }, 10, 5000);
-      WindowsShellInstance = new WindowsShell(this, psExecPath);
+      WindowsShellInstance = new WindowsShell(this);
       //this will populate the GuestEnvironmentVariables. Short time after start APPDATA may be empty
       RetryUtility.RetryAction( InvalidateCachedGuestEnvironmentVariables, 10, 10000);
 

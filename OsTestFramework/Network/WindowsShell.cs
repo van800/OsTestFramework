@@ -18,7 +18,7 @@ namespace JetBrains.OsTestFramework.Network
     /// New instance of a guest operating system wrapper.
     /// </summary>
     /// <param name="env">Remote environment.</param>
-    public WindowsShell(RemoteEnvironment env, string psExecPath)
+    public WindowsShell(RemoteEnvironment env)
     {
       Env = env;
       _psExecWrapperInstance = new PsExecWrapper(env);
