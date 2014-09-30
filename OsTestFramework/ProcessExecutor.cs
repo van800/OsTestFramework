@@ -146,11 +146,11 @@ namespace JetBrains.OsTestFramework
             }
             if (_errorWaitHandle != null)
             {
-                _errorWaitHandle.Dispose();
+                _errorWaitHandle.Close();
             }
             if (_outputWaitHandle != null)
             {
-                _outputWaitHandle.Dispose();
+                _outputWaitHandle.Close();
                 _outputWaitHandle = null;
             }
         }

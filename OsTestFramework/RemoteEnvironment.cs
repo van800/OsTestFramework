@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
@@ -136,8 +134,8 @@ namespace JetBrains.OsTestFramework
         {
           OsTestLogger.WriteLine(string.Format(" Directory.RemoveReadOnly? 'Remote:{0}'", guestNetworkPath));
             var directoryInfo = new DirectoryInfo(guestDirPath);
-            var fileSystemInfos = directoryInfo.EnumerateFileSystemInfos("*.", SearchOption.AllDirectories);
-            foreach (var fileSystemInfo in fileSystemInfos)
+            var fileInfos = directoryInfo.GetFileSystemInfos();
+            foreach (var fileSystemInfo in fileInfos)
             {
                 var modifiedAttributes = RemoveAttribute(fileSystemInfo.Attributes, FileAttributes.ReadOnly);
                 File.SetAttributes(fileSystemInfo.FullName, modifiedAttributes);
