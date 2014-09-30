@@ -16,11 +16,11 @@ namespace JetBrains.OsTestFramework.Test
     [Test]
     public void InvalidateCachedGuestEnvironmentVariablesTest()
     {
-      string ip = "172.20.241.223";
+      string ip = "172.20.160.42";
       string userName = "user";
       string password = "123";
 
-      using (var operatingSystem = new RemoteEnvironment(ip, userName, password, Path.Combine(_assemblyDirectory, @"..\tools\PsExec.exe")))
+      using (var operatingSystem = new RemoteEnvironment(ip, userName, password, Path.Combine(_assemblyDirectory, @"..\packages\PsExec.exe.2.11.0.0\PsExec.exe")))
       {
         operatingSystem.InvalidateCachedGuestEnvironmentVariables();
         Console.WriteLine(operatingSystem.GuestEnvironmentVariables.Count);  

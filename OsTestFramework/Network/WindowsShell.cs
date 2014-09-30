@@ -13,7 +13,7 @@ namespace JetBrains.OsTestFramework.Network
   /// </summary>
   public class WindowsShell : IDisposable
   {
-    private PsExecWrapper PsExecWrapperInstance;
+    private readonly PsExecWrapper _psExecWrapperInstance;
     /// <summary>
     /// New instance of a guest operating system wrapper.
     /// </summary>
@@ -21,7 +21,7 @@ namespace JetBrains.OsTestFramework.Network
     public WindowsShell(RemoteEnvironment env, string psExecPath)
     {
       Env = env;
-      PsExecWrapperInstance = new PsExecWrapper(env);
+      _psExecWrapperInstance = new PsExecWrapper(env);
 
       // Warmup run of cmd using psexec. Required mainly for the case of machines with some network problem on startup
       OsTestLogger.WriteLine("Start sample initial program with big timeout to ensure all remaining will be also fine with short timeout.");
@@ -204,7 +204,7 @@ namespace JetBrains.OsTestFramework.Network
         Env.CopyFileFromHostToGuest(hostCommandBatch, guestCommandBatch);
         string cmdArgs = string.Format("> \"{0}\" 2>\"{1}\"", guestStdOutFilename, guestStdErrFilename);
         OsTestLogger.WriteLine("ExecuteElevatedCommandInGuest: " + guestCommandLine);
-        var commandResult = PsExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandBatch + " " + cmdArgs, null, startTimeout, executionTimeout);
+        var commandResult = _psExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandBatch + " " + cmdArgs, null, startTimeout, executionTimeout);
 
           var stdOut = ReadFile(guestStdOutFilename);
           var stdErr = ReadFile(guestStdErrFilename);
@@ -235,7 +235,7 @@ namespace JetBrains.OsTestFramework.Network
       /// <param name="executionTimeout"></param>
       public void ExecuteElevatedCommandInGuestNoRemoteOutput(string guestCommandLine, TimeSpan startTimeout, TimeSpan? executionTimeout = null)
     {
-      PsExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandLine, null, startTimeout, executionTimeout);
+      _psExecWrapperInstance.ExecuteElevatedCommandInGuest(guestCommandLine, null, startTimeout, executionTimeout);
     }
 
     /// <summary>
@@ -253,8 +253,8 @@ namespace JetBrains.OsTestFramework.Network
 
       while (!m.Success && (DateTime.Now - tick) <= startTimeout)
       {
-        var commandResult = PsExecWrapperInstance.DetachElevatedCommandInGuest(guestCommandLine, null, startTimeout);
-        m = Regex.Match(commandResult.StdOut, @"with process ID \d+.");
+        var commandResult = _psExecWrapperInstance.DetachElevatedCommandInGuest(guestCommandLine, null, startTimeout);
+        m = Regex.Match(commandResult.StdErr, @"with process ID \d+.");
         Thread.Sleep(2000);
       }
 
@@ -281,7 +281,7 @@ namespace JetBrains.OsTestFramework.Network
       {
         Env.CopyFileFromHostToGuest(hostCommandBatch, guestCommandBatch);
         OsTestLogger.WriteLine("BeginElevatedCommandInGuest: " + guestCommandLine);
-        return PsExecWrapperInstance.BeginElevatedCommandInGuest(guestCommandBatch, startTimeout);
+        return _psExecWrapperInstance.BeginElevatedCommandInGuest(guestCommandBatch, startTimeout);
       }
       finally
       {
