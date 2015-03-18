@@ -10,7 +10,7 @@
 	<requireLicenseAcceptance>false</requireLicenseAcceptance>
 	<description>Library provides functionallity for managing remote Windows machine, like Copy/Delete/Read File, Execute elevated command, Read registry, WMI operations, etc.</description>
 	<dependencies>
-		<dependency id="ZetaLongPaths" version="1.0.0.6" />
+		<dependency id="ZetaLongPaths" version="[1.0.0.6]" />
 	</dependencies>
 	</metadata>
 	<files>
